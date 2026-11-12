@@ -1,0 +1,42 @@
+# 仅供 Agent 合并的配置片段，不是完整订阅，不能独立导入。
+# 用真实存在的手动选择组替换 REPLACE_WITH_SELECTOR。
+# 不含 proxies / proxy-providers；不要向本仓库加入节点凭据。
+# 合并时保留原 rules，并将下面的明确域名规则放在会抢先匹配的规则之前。
+mode: rule
+ipv6: false
+
+dns:
+  enable: true
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/15
+  # 引导 DNS 应按网络可达性选择；这里只列现场采用的地址。
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  proxy-server-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  nameserver:
+    - "https://1.1.1.1/dns-query#REPLACE_WITH_SELECTOR"
+  # 只有明确命中 DIRECT 的目标使用此类解析；业务需要才保留。
+  direct-nameserver:
+    - "https://dns.alidns.com/dns-query#DIRECT"
+    - "https://doh.pub/dns-query#DIRECT"
+  direct-nameserver-follow-policy: false
+  # 按用户实际需求合并 nameserver-policy，不要添加 Claude 的直连例外。
+  # 保留原来必要的 fake-ip-filter；不要用本片段清空原列表。
+
+tun:
+  enable: true
+  auto-route: true
+  auto-detect-interface: true
+  dns-hijack:
+    - any:53
+  # 栈、路由例外和其他 TUN 字段由 Agent 保留原值并验收，不在这里改写。
+
+rules:
+  - DOMAIN-SUFFIX,claude.ai,REPLACE_WITH_SELECTOR
+  - DOMAIN-SUFFIX,anthropic.com,REPLACE_WITH_SELECTOR
+  - DOMAIN-SUFFIX,claudeusercontent.com,REPLACE_WITH_SELECTOR
+  # 必须继续接上原订阅规则；不要把这一节当成完整规则列表覆盖。

@@ -1,0 +1,14 @@
+# 所有真实配置、测试输出和备份在仓库外保存
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+.env
+.env.*
+private/
+backups/
+reports/
+*.log
+*.pcap
+*.pcapng
+*.har
