@@ -133,7 +133,16 @@ curl --noproxy '*' -6 --connect-timeout 5 --max-time 10 --resolve 'dns.google:44
 
 通过标准：IPv4 成功且出口符合预期；两条 IPv6 失败；网络服务 Off，物理接口无公网 IPv6。证书、HTTP 状态错误不是 IPv6 不通的证据，需检查失败阶段；任何成功的 IPv6 TCP/TLS 连接都需继续排查。单个网站超时也不够。
 
-### 5.3 DNS 解析器测试
+### 5.3 多站点初筛、分流与 DNS / WebRTC
+
+按 [多站点检测与结果判读](network-checks.md) 执行：
+
+1. 用 [WildAI](https://bewild.ai/network-detection?source=claude-subscribe) 与 [IPinfo.CV Claude 检测](https://ipinfo.cv/claude-ai-check) 做综合初筛，保留字段明细。
+2. 用 [Net.Coffee](https://ip.net.coffee/) 的网站分流测试检查不同目标看到的 IPv4 出口；出现国内出口时查具体域名与命中规则。保留用户要求的 EAS / DSW 等直连，Claude 与验证依赖的意外直连须处理。
+3. 做下述 DNS 交叉验证；可用 [Net.Coffee DNS](https://ip.net.coffee/dns/) 与 [IPinfo.CV DNS](https://ipinfo.cv/dns-leak-check) 补充。
+4. 用 [Net.Coffee WebRTC](https://ip.net.coffee/webrtc/) 或 [IPinfo.CV WebRTC](https://ipinfo.cv/webrtc-check) 核对有效公网候选地址和 UDP 路径。无候选或超时记未验证，不视为代理通过。
+
+综合检测页低风险不能结束验收。保持原节点与模式，不为消除红色提示开启全局代理或删除业务直连规则。
 
 使用用户实际浏览器访问 [BrowserLeaks DNS](https://browserleaks.com/dns) 与 [DNSLeakTest](https://www.dnsleaktest.com/)（Extended test）。记录出口、解析器归属和时间。
 

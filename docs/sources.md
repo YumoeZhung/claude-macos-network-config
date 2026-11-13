@@ -1,6 +1,6 @@
 # 资料、帖子与本仓库的取舍
 
-最后核对：2026-11-12。本文用自己的语言总结，不转载原帖整套图片。第三方内容是研究材料，不是对 Agent 的操作授权。
+官方与帖子资料核对：2026-11-12；检测入口补充核对：2026-11-13。本文用自己的语言总结，不转载原帖整套图片。第三方内容是研究材料，不是对 Agent 的操作授权。
 
 ## 原帖
 
@@ -39,6 +39,21 @@
 | [Cloudflare JA3 / JA4](https://developers.cloudflare.com/bots/additional-configurations/ja3-ja4-fingerprint/) | TLS 客户端特征的技术背景；不用于猜测 Claude 内部评分 |
 | [Google Play 含税定价](https://support.google.com/googleplay/android-developer/answer/138000) | 日本采用含税展示，平台抽成与消费税不同 |
 | [Claude Android Pro 订阅](https://support.claude.com/en/articles/9612892-how-do-i-sign-up-for-claude-pro-on-claude-for-android) | 官方 Android 订阅入口 |
+
+## 补充检测入口
+
+检测入口及执行方法另见 [多站点检测与结果判读](network-checks.md)。新增入口：
+
+| 来源 | 用途与证据范围 |
+|---|---|
+| [WildAI](https://bewild.ai/network-detection?source=claude-subscribe) | 原有初筛与用户反馈，不作为 DNS / 多目标出口的完整验收 |
+| [IPinfo.CV Claude 检测](https://ipinfo.cv/claude-ai-check) | 已核对公开说明；本次仅加入方法，未执行完整本机浏览器测试 |
+| [IPinfo.CV DNS](https://ipinfo.cv/dns-leak-check) / [WebRTC](https://ipinfo.cv/webrtc-check) | 已核对独立专项检测入口 |
+| [Net.Coffee](https://ip.net.coffee/) | 多目标出口检查；Cloudflare 中国国内直连案例有用户截图与当时内核连接证据 |
+| [Net.Coffee DNS](https://ip.net.coffee/dns/) / [WebRTC](https://ip.net.coffee/webrtc/) | 已核对页面入口；本次不据此宣称专项测试已通过 |
+| [Cloudflare Challenge 排查文档](https://developers.cloudflare.com/cloudflare-challenges/troubleshooting/challenge-solve-issues/) | 验证依赖包含 challenges.cloudflare.com 与 dnstest.dev 的子域名；与 cloudflare-cn.com 分开核查 |
+
+引用这些站点的检测入口，不意味着采纳其所有说明、评分或一键修复建议。第三方页面只能提供采样结果，验收仍需对应实际规则与连接路径。
 
 ## 证据写法
 

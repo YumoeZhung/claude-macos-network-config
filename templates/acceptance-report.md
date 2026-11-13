@@ -23,7 +23,13 @@
 | DNS nameserver 绑定实际选择组 | | |
 | 引导 DNS 独立且 Claude 域名无直连例外 | | |
 | DNS 上游实际代理链 | | |
+| WildAI / IPinfo.CV 综合初筛字段（非总分） | | |
+| Net.Coffee 网站分流：各目标 IPv4 出口、域名、规则链 | | |
+| 国内出口逐项解释：预期业务直连 / 意外直连 / 待核查 | | |
 | BrowserLeaks / DNSLeakTest | | |
+| Net.Coffee / IPinfo.CV 独立 DNS 测试（如执行） | | |
+| WebRTC 有效公网候选、HTTP 出口与 UDP 路径 | | |
+| Claude 验证依赖的 DNS / 代理路径 | | |
 | Clash 运行态 IPv6 false | | |
 | DNS IPv6 false、AAAA 空答案 | | |
 | 各现有系统网络服务 IPv6 Off | | |
@@ -39,11 +45,15 @@
 | bridge.claudeusercontent.com | | | | | | |
 
 - 地区差异、轮换 IP、不可用诊断接口的解释：
+- 各检测站点的时间、浏览器、网络与原始字段（私下记录；未执行写未验证）：
+- Cloudflare 验证依赖：challenges.cloudflare.com / dnstest.dev 及实际观察到的其他域名；说明仅规则检查还是已观察实际连接：
 - 登录前检查点：通过 / 停止（列未完成项）
 - 用户登录与订阅状态（不记录凭据）：
 - 使用中被动采样时间、进程与连接链：
 - WebRTC / 语音是否单独实测：
 - 手机结果是否单独取得：
+- 手机 VPN：始终开启 / 屏蔽未使用 VPN 的所有连接（分别记录支持情况、开关证据）：
+- 手机后台策略：Claude / Google Play 商店禁止后台运行；Clash Meta 后台无限制与自启动（分别核对）：
 - 结束时订阅、节点、IPv4 连通性：
 
 ## 回滚和后续

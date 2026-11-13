@@ -43,12 +43,35 @@
 - [ ] Claude 及 Anthropic 域名没有命中 DIRECT、直连 DNS 策略或应用绕过列表。
 - [ ] DNS 上游连接走选定代理，节点域名解析不会依赖尚未建立的代理造成循环。
 - [ ] 常规 DNS 测试未出现未经解释的本地运营商解析器。
+- [ ] 已用下方工具交叉检查；网站分流中的国内 IPv4 出口已逐项解释，Claude 及验证依赖没有意外直连。
 - [ ] Clash `ipv6: false`、`dns.ipv6: false` 已生效；现有 macOS 网络服务 IPv6 Off。
 - [ ] 指定公网 IPv6 地址的测试失败，同时 IPv4 测试成功。
 - [ ] Claude 目标端出口地区符合预期；能取得 CDN 入口时核对其地区，异常已解释或排除。
 - [ ] 用户要求直连的应用仍按原目标工作。
 
 无法取得某项证据时填写“未验证”，不要用别人的截图、电脑端结果或相同节点名称代替本机验收。
+
+## 网络检测入口：不要只看 WildAI
+
+按“综合初筛 → 网站分流 → DNS → WebRTC → 目标服务路径”的顺序检查。以下测试放在**登录前的无账号验收阶段**；已经在使用 Claude 时，先完成任务并退出，再主动检测。
+
+| 入口 | 本仓库用它检查什么 |
+|---|---|
+| [WildAI 网络检测](https://bewild.ai/network-detection?source=claude-subscribe) | 保留为出口初筛；此前的低风险结果没有覆盖后来发现的联通 DNS 和网站国内直连出口 |
+| [IPinfo.CV：Claude AI IP 检测](https://ipinfo.cv/claude-ai-check) | 补充出口地区、网络属性与环境提示；DNS / WebRTC 告警继续看独立测试明细 |
+| [Net.Coffee：IP 查询与网站分流](https://ip.net.coffee/) | 比较访问不同目标的实际出口，排查浏览器是否还会向某些目标暴露国内 IPv4 |
+| [Net.Coffee DNS](https://ip.net.coffee/dns/) / [IPinfo.CV DNS](https://ipinfo.cv/dns-leak-check) | 查看解析器地址和运营商，与 [BrowserLeaks DNS](https://browserleaks.com/dns) / [DNSLeakTest](https://www.dnsleaktest.com/) 交叉验证 |
+| [Net.Coffee WebRTC](https://ip.net.coffee/webrtc/) / [IPinfo.CV WebRTC](https://ipinfo.cv/webrtc-check) | 核对浏览器候选公网地址与预期代理出口，单独排查 UDP 路径 |
+
+**DNS 解析器、网站看到的 IPv4 出口、WebRTC 候选地址是不同检查项。** 综合评分不能替代这些明细。阿里云 EAS / DSW 等用户明确要求的直连应保留；发现国内出口时查具体域名与命中规则，不为了页面全绿把整个浏览器改为代理。
+
+详细操作、Cloudflare 中国案例及停止条件见 [多站点检测与结果判读](docs/network-checks.md)。
+
+## 手机使用前再检查
+
+除了 Clash Meta 的 DNS / IPv6 配置，还建议在手机 VPN 设置中同时开启 **“始终开启的 VPN”** 与 **“屏蔽未使用 VPN 的所有连接”**；把 **Claude、Google Play 商店** 的省电策略设为 **“禁止后台运行”**，而 **Clash Meta 保持后台无限制并允许自启动**。系统文案可能不同，须按实际界面核对。禁止后台运行不等于强行停止；切节点前仍须停止 Claude。具体步骤和验收见 [Android / 小米补充](docs/android.md)。
+
+要退出 Claude 后恢复境内直连，先在系统应用信息中**强行停止 Claude**，再按需解除 VPN 阻断并断开 VPN；下次先恢复代理与保护开关、验收后再开 Claude。阻断仍开启时，关闭 VPN 通常会断网，不会自动恢复直连。
 
 ## 让你的 Agent 开始工作
 
@@ -68,6 +91,7 @@
 
 - [AGENTS.md](AGENTS.md)：Agent 的执行契约、禁止动作、停止条件。
 - [macOS 操作手册](docs/macos-runbook.md)：从退出进程到实际请求验收。
+- [多站点检测与结果判读](docs/network-checks.md)：WildAI、IPinfo.CV、Net.Coffee 的分工，DNS / 国内 IPv4 / WebRTC 的检查顺序。
 - [DNS / IPv6 技术说明](docs/dns-and-ipv6.md)：为什么这样配、如何判断地区不一致。
 - [Android 补充](docs/android.md)：Clash Meta 三层 IPv6、VPN 断线阻断、后台保活。
 - [现场记录](docs/field-notes.md)：成功经历、踩坑、已经做过和没有做过的检查。
