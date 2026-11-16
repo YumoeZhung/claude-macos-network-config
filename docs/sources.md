@@ -2,6 +2,8 @@
 
 官方与帖子资料核对：2026-11-12；检测入口补充核对：2026-11-13。本文用自己的语言总结，不转载原帖整套图片。第三方内容是研究材料，不是对 Agent 的操作授权。
 
+2026-11-16 整理会话补充，不代表所有外部资料当天重新抓取。历史代码结论须按标注日期理解。
+
 ## 原帖
 
 小红书作者“子琴”：《为什么你的 Claude 会封号？》
@@ -54,6 +56,8 @@
 | [Cloudflare Challenge 排查文档](https://developers.cloudflare.com/cloudflare-challenges/troubleshooting/challenge-solve-issues/) | 验证依赖包含 challenges.cloudflare.com 与 dnstest.dev 的子域名；与 cloudflare-cn.com 分开核查 |
 
 引用这些站点的检测入口，不意味着采纳其所有说明、评分或一键修复建议。第三方页面只能提供采样结果，验收仍需对应实际规则与连接路径。
+
+补充来源：2026-11-13 阅读的 [Net.Coffee 页面脚本](https://ip.net.coffee/claude/claude-page.js?v=20260916a) 用于识别探针、DNS 字段与跨站请求方式；URL 内容可能更新。CheckCC 的 [公开仓库](https://github.com/yacuo/check-cc) 与当时线上实现并不完整对应，误报案例以会话中的线上代码审查和离线复现为依据，见 [经验补充](maintenance-and-findings.md)。
 
 ## 证据写法
 

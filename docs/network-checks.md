@@ -2,6 +2,8 @@
 
 检测入口核对日期：**2026-11-13**。本页供用户和 Agent 执行登录前验收，配合 [macOS 操作手册](macos-runbook.md) 第 5 阶段使用。手机在自己的浏览器、Wi-Fi / 移动网络中分别执行，不能继承电脑结果。
 
+全局顺序为电脑先验收、手机后验收，之后才在手机下载官方 App 并登录 / 订阅，最后登录电脑。新装用户无需安装 Claude 就能执行这些网络测试；初始浏览器旧会话清理按 macOS 手册第 0 节完成。
+
 ## 0. 前提与记录
 
 先完成 Claude 任务，退出 Desktop、Code、扩展及相关自动任务；保持待验收的订阅、节点和 TUN 设置。检测页会主动访问多个目标、查询 DNS 或发送 STUN 请求，**不是被动检查**。用户仍在使用 Claude 时，不自行打开检测页或点击重测。
@@ -43,6 +45,20 @@ IPinfo.CV 已核对页面说明和独立 DNS / WebRTC 入口；**本次文档更
 
 单独代理 `www.cloudflare-cn.com` 只能改变该测试项的出口，不能代替验证依赖检查。不要为了测试全绿扩大到所有浏览器请求，也不要移除用户需要的业务直连。
 
+### Claude 检测页的三个出口栏与 CDN
+
+不要混淆首页“网站分流测试”和 [Net.Coffee Claude 检测页](https://ip.net.coffee/claude/) 的字段。2026-11-13 阅读该页脚本时确认：
+
+| 页面字段 | 当时的探针 | 能说明什么 |
+|---|---|---|
+| 中国 IPv4 出口 | 先请求 `https://2026.ip138.com/`，失败后请求 `https://my.ip.cn/` | 这些探针看到的来源 IP；栏目名称不保证结果一定是国内 |
+| Cloudflare 出口 IP | `https://1.1.1.1/cdn-cgi/trace` | Cloudflare 探针看到的来源 IP，不是 CDN 机房地址 |
+| Claude 出口 IP | `https://claude.ai/cdn-cgi/trace` | Claude 目标诊断返回的来源 IP / 地区 |
+
+当时 Claude 探针只提取 `ip`、`loc`，没有在该卡片展示 `colo`。因此这张综合报告不能代替 [目标端 CDN 验收](macos-runbook.md)：另记录 `colo` / `CF-Ray` 才能判断入口机房。之前的 JP / NRT 结论来自单独的目标端检查，不是从“Cloudflare 出口 IP”推断。
+
+该页 DNS 通过随机子域名与结果接口取得解析器，再显示其中一个结果；需要完整清单时用独立 DNS 页面。不得将单个卡片当成所有解析器都已展示。原生 / 跟随版的两张截图及配置对比见 [经验补充](maintenance-and-findings.md)。脚本会访问 Claude 域名，其跨站 Cookie 行为也在该文单列，避免把“无账号检测”误解成“不访问 Claude”。
+
 ## 3. DNS：必须看到解析器明细
 
 主交叉验证使用 [BrowserLeaks DNS](https://browserleaks.com/dns) 与 [DNSLeakTest](https://www.dnsleaktest.com/) 的 Extended test；补充入口为 [Net.Coffee DNS](https://ip.net.coffee/dns/)（可选深度测试）和 [IPinfo.CV DNS](https://ipinfo.cv/dns-leak-check)。
@@ -69,6 +85,6 @@ IPinfo.CV 已核对页面说明和独立 DNS / WebRTC 入口；**本次文档更
 
 ## 5. 完成目标验收，再登录
 
-返回 [macOS 操作手册](macos-runbook.md) 第 5.4 节完成目标域名与 CDN 核查，同时完成 IPv6 与业务直连验收，再填写 [验收报告](../templates/acceptance-report.md)。明确区分实测、用户反馈、历史结果与待验证。
+电脑阶段返回 [macOS 操作手册](macos-runbook.md) 第 5.4 节完成目标域名与 CDN 核查，同时完成 IPv6 与业务直连验收，再填写 [验收报告](../templates/acceptance-report.md)。随后推进手机配置与独立验收、手机安装登录及订阅，最后回电脑登录。明确区分实测、用户反馈、历史结果与待验证。
 
 任何未解释的本地 DNS、公网 IPv6 旁路、WebRTC 运营商出口，或 Claude / 验证请求直连，都先停在验收阶段处理。阿里云等已确认的业务直连单独记录；不把“所有站点分数全绿”作为验收目标。
