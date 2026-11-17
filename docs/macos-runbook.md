@@ -64,6 +64,8 @@ networksetup -getinfo 'Thunderbolt Bridge'
 
 参考 [配置片段](../templates/profile-overlay.example.yaml)。它不是完整订阅，不能独立导入。
 
+需要收紧原订阅的直连例外时，按 [规则收紧与回滚](rule-tightening.md) 单独形成删除清单、归档并验收；不要直接套用案例的 105 条数量。检查代理组的实际选择，不能仅搜索 `DIRECT`。保留国内 GeoIP 后，撤销域名例外仍可能得到直连结果。
+
 ## 3. 配置 DNS 跟随节点
 
 核心设置：

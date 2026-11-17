@@ -2,7 +2,7 @@
 
 给普通用户和代为配置的 Agent：**先验收电脑环境，再验收手机环境；手机下载安装、登录并完成订阅后，最后登录电脑。** 主线是 **macOS + Clash Verge Rev + Mihomo + Android Clash Meta + 官方 Claude App / Desktop / Claude Code**。
 
-流程与会话经验最后整理：**2026-11-16**。下方实测日期单独保留，整理日期不代表当天重新完成网络测试。
+流程与会话经验最后整理：**2026-11-17**。下方实测日期单独保留，整理日期不代表当天重新完成全部网络测试。
 
 ## 我们如何理解 Claude 的账号风控
 
@@ -74,6 +74,8 @@ Cookie 清理放在电脑网络配置之前，目的是**避免后续登录沿�
 
 **电脑哪些应用或站点直连，由使用者自行选择。** Agent 先整理用户的直连清单，再配置对应规则和必要的 DNS 例外，并验证业务。Typeless、向日葵、EAS、DSW 只是本次案例，不默认加入其他人的配置；也不把整个 Chrome 设为直连。
 
+**2026-11-17 更新**：Mac 本地配置撤销 105 条非必要直连例外，规则从 2,479 条降至 2,374 条，DNS 与节点选择未变。保留本地网络、明确业务、国内 IP / 国内媒体规则，其余默认代理。这是整份订阅的规则数，不是 Claude 专用规则数；手机尚未同步。完整变更、实测边界和回滚流程见 [直连规则收紧](docs/rule-tightening.md)。
+
 详细操作、Cloudflare 中国案例及停止条件见 [多站点检测与结果判读](docs/network-checks.md)。
 
 ## 手机使用前再检查
@@ -109,6 +111,7 @@ Cookie 清理放在电脑网络配置之前，目的是**避免后续登录沿�
 - [Android 补充](docs/android.md)：Clash Meta 三层 IPv6、VPN 断线阻断、后台保活。
 - [现场记录](docs/field-notes.md)：成功经历、踩坑、已经做过和没有做过的检查。
 - [维护与经验补充](docs/maintenance-and-findings.md)：原生与跟随版对比、订阅更新、检测工具误报及当前待办。
+- [直连规则收紧与回滚](docs/rule-tightening.md)：105 条例外删除、GeoIP / MATCH 解释、运行态验收与节点故障范围。
 - [资料与帖子对照](docs/sources.md)：网络工程建议的取舍和官方来源。
 - [配置片段](templates/profile-overlay.example.yaml)：仅供合并，不能直接导入作为完整订阅。
 - [验收报告模板](templates/acceptance-report.md)：给用户交付，也便于下一个 Agent 接手。
