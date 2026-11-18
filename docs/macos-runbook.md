@@ -168,23 +168,94 @@ curl --noproxy '*' -6 --connect-timeout 5 --max-time 10 --resolve 'dns.google:44
 
 ### 5.4 目标域名与 CDN（必做）
 
-检查 `claude.ai`、`api.anthropic.com`、`bridge.claudeusercontent.com`：
+原会话使用的是**命令行查询**：通过本地 Mihomo API 查真实 DNS、通过当前代理请求 Cloudflare DoH，再用 `curl` 请求三个 Claude 目标的诊断路径；同时读取 `/connections` 核对命中规则与代理链。部分查询和连接采样由临时 Python 命令组织，不依赖 Net.Coffee，也不是扫描全部节点。下面将当时的方法整理为可复制的分步命令。
 
-1. 系统解析结果：fake-ip 模式下通常为 `198.18.x.x`，这是本地映射。
-2. 内核 `/dns/query?name=<域名>&type=A` 查询真实答案；DNS listener 的 AAAA 查询确认空答案。
-3. 沿当前代理访问配置的 Cloudflare DoH，查询同一域名，比较真实答案。轮换的 CDN 地址不要求逐字相同，但需解释是否属于同一服务及合理调度。
-4. 查看 `1.1.1.1:443` DNS 连接的实际代理链，确认走当前末级节点。
-5. 对目标发送无账号诊断请求：
+本节只检查**当前已经启用的配置和节点**。执行前完成第 0 节的会话退出确认，并在 Clash 中核对启用的是准备验收的配置；更新了本地 YAML 不等于已经启用。以下查询会实际访问网络，但不会修改配置、切换节点或重载内核。
+
+#### 准备当前本机参数
+
+从正在运行的内核启动参数中找到 `-ext-ctl-unix` 后的路径；不要照抄别人的用户 ID 或旧 socket。HTTP / mixed 端口从当前 Clash 设置中读取，不使用 SOCKS 专用端口。
 
 ```bash
-curl --noproxy '*' --connect-timeout 5 --max-time 10 https://claude.ai/cdn-cgi/trace
-curl --noproxy '*' --connect-timeout 5 --max-time 10 https://api.anthropic.com/cdn-cgi/trace
-curl --noproxy '*' --connect-timeout 5 --max-time 10 https://bridge.claudeusercontent.com/cdn-cgi/trace
+ps -ax -o args= | grep '[v]erge-mihomo'
+
+# 先替换下面两个占位值；后面的命令在同一个终端窗口执行。
+CDN_SOCK='替换为当前 -ext-ctl-unix 后的完整路径'
+CDN_PROXY='http://127.0.0.1:替换为当前HTTP或mixed端口'
 ```
 
-记录 `ip`、`loc`、`colo`，与出口一致性比对；同时核对连接中的规则与代理链。响应带 `CF-Ray` 时可参考其机房后缀。路径将来若不可用、返回挑战页或没有这些字段，不绕过验证，不把 403 / 缺字段当作验证通过，改用可取得的服务端证据并写清待验证项。
+本地 API 示例适用于已有 Unix socket 可直接读取的情况。若权限不足或返回 401 / 403，先按当前客户端的认证方式处理；不要关闭认证、开放公网控制器或把密钥贴到报告里。未取得 API 结果时将对应项记为未验证。
 
-不要通过 IP 地理数据库把 Anycast 地址强行映射到唯一国家；服务端 `colo` 更能反映本次入口。本次现场三域名均返回 JP / NRT，详见 [DNS 说明](dns-and-ipv6.md)。远端节点内部的二次解析仍是可见性边界。
+#### 记录系统映射、内核真实答案与 DoH 对照
+
+先查询 macOS 的系统解析结果：
+
+```bash
+for CDN_HOST in claude.ai api.anthropic.com bridge.claudeusercontent.com; do
+  dscacheutil -q host -a name "$CDN_HOST"
+done
+```
+
+fake-ip 模式下通常能看到 `198.18.x.x`，它是应用使用的本地映射，不是目标服务的真实公网地址。缓存或 fake-ip 例外可能改变这里的结果，应结合配置解释。
+
+查询当前 Mihomo 内核的真实 A 答案：
+
+```bash
+for CDN_HOST in claude.ai api.anthropic.com bridge.claudeusercontent.com; do
+  printf '\n内核 DNS：%s\n' "$CDN_HOST"
+  curl -q --noproxy '*' --unix-socket "$CDN_SOCK" \
+    --fail --silent --show-error --max-time 10 \
+    "http://localhost/dns/query?name=${CDN_HOST}&type=A"
+done
+```
+
+再经当前 Clash 的本地 HTTP / mixed 代理请求 Cloudflare DoH，查询相同域名：
+
+```bash
+for CDN_HOST in claude.ai api.anthropic.com bridge.claudeusercontent.com; do
+  printf '\n代理 DoH 对照：%s\n' "$CDN_HOST"
+  curl -q --proxy "$CDN_PROXY" --noproxy '' \
+    --fail --silent --show-error --connect-timeout 5 --max-time 10 \
+    -H 'accept: application/dns-json' \
+    "https://1.1.1.1/dns-query?name=${CDN_HOST}&type=A"
+done
+```
+
+这里的 `--proxy` 与 `--noproxy ''` 用于明确经过本地代理，并排除环境变量 `NO_PROXY` 的绕过。它只验证这次人工 DoH 请求；**不能单凭它证明内核自己的 DNS 上游也经过同一节点**，还要核对下一节的连接链。该示例对应原会话使用的 Cloudflare DoH；使用其他上游时，应按其公开查询接口另作对照，不把 Cloudflare 结果冒充所配置上游的结果。
+
+保存每个域名的 `Status`、`Answer` 中的 A 记录、CNAME 和 TTL（若有）。HTTP 成功但 DNS 报错或无 A 答案，不能写成已取得真实地址。同一域名的两种查询结果可受缓存、轮换与调度影响，不要求逐字一致；三个不同域名也不要求解析为同一个 IP。DNS listener 是否返回 AAAA 空答案另按第 4 节与第 5.2 节核对，不能从 A 查询推断 IPv6 已关闭。
+
+#### 请求三个目标自己的出口与 CDN 信息
+
+```bash
+curl -q --noproxy '*' -4 -i --connect-timeout 5 --max-time 10 https://claude.ai/cdn-cgi/trace
+curl -q --noproxy '*' -4 -i --connect-timeout 5 --max-time 10 https://api.anthropic.com/cdn-cgi/trace
+curl -q --noproxy '*' -4 -i --connect-timeout 5 --max-time 10 https://bridge.claudeusercontent.com/cdn-cgi/trace
+```
+
+这些请求不携带账号 Cookie / API Key，不跟随跳转；`-q` 忽略个人 `.curlrc`，`-4` 将本次样本限定为 IPv4。`--noproxy '*'` 避免显式 HTTP 代理环境变量影响结果，**不会关闭 TUN，也不会自动保证流量已被 TUN 接管**，必须核对实际连接。
+
+记录 HTTP 状态、`ip`（目标看到的出口）、`loc`（该出口的地区标签）、`colo`（处理请求的边缘机房）。`-i` 同时显示响应头，可记录 `CF-Ray` 后缀作为补充线索；不把内部回源链路的机房字段与客户端入口混为一谈。403 / 挑战页即使带有 `CF-Ray`，也只能说明观察到机房线索，不能证明服务可用；缺字段、超时或诊断路径失效均记未验证。
+
+#### 把这些结果与实际代理链配对
+
+先打开 Clash 的 **Connections / 连接** 页面，再执行上面的查询。分别记录：
+
+- 三个 Claude 域名：进程、入站类型、命中规则、代理组和最终节点；预期代理请求不能命中 `DIRECT`。
+- `1.1.1.1:443`：区分人工 `curl` 的 DoH 对照请求与内核自己的 DNS 上游连接，核对后者是否经过预定选择组与末级节点。内核 DNS 连接不一定有普通应用进程名。
+
+原会话还通过已有本地 API 采样 `/connections`。需要终端方式时，可在请求进行期间另开窗口读取；该窗口也需先设置自己的 `CDN_SOCK`：
+
+```bash
+curl -q --noproxy '*' --unix-socket "$CDN_SOCK" \
+  --fail --silent --show-error --max-time 5 http://localhost/connections
+```
+
+其中 `metadata` 提供进程、域名、目标地址及入站类型，`rule` / `rulePayload` 是命中规则，`chains` 是代理链。完整响应可能包含其他业务的连接信息，只私下保存并提取上述目标，不公开整份响应。短连接可能在采样前结束；没捕获到不能推断直连或通过，也不要为了抓到记录更改规则或反复高频请求。
+
+把同一时段、同一配置、同一节点的结果填入 [验收报告的目标域名表](../templates/acceptance-report.md#目标域名)。目标 DNS 地址、请求出口与递归解析器地址是不同角色，不要求 IP 数字或所有地区标签相同；异常差异需要结合路径解释。不要通过 IP 地理数据库把 Anycast 地址强行映射到唯一国家。
+
+原会话三域名均返回 JP / NRT，属于当时的历史结果，详见 [DNS 说明](dns-and-ipv6.md)，不是今后的固定合格值。远端节点内部的二次解析仍不可由本机 API 直接证明；这套检查也不证明 Claude 内部是否使用 DNS 时序、反向 DNS 或其他风控信号。
 
 ### 5.5 业务直连与回滚验收
 

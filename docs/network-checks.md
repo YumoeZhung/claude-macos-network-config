@@ -57,7 +57,11 @@ IPinfo.CV 已核对页面说明和独立 DNS / WebRTC 入口；**本次文档更
 
 当时 Claude 探针只提取 `ip`、`loc`，没有在该卡片展示 `colo`。因此这张综合报告不能代替 [目标端 CDN 验收](macos-runbook.md)：另记录 `colo` / `CF-Ray` 才能判断入口机房。之前的 JP / NRT 结论来自单独的目标端检查，不是从“Cloudflare 出口 IP”推断。
 
-该页 DNS 通过随机子域名与结果接口取得解析器，再显示其中一个结果；需要完整清单时用独立 DNS 页面。不得将单个卡片当成所有解析器都已展示。原生 / 跟随版的两张截图及配置对比见 [经验补充](maintenance-and-findings.md)。脚本会访问 Claude 域名，其跨站 Cookie 行为也在该文单列，避免把“无账号检测”误解成“不访问 Claude”。
+**2026-11-18 补充：** Net.Coffee 另有 [Cloudflare 边缘节点检测页](https://ip.net.coffee/cloudflare/)。核对其 [页面代码](https://ip.net.coffee/cloudflare/cloudflare-page.js?v20260916d)，顶部出口和机房卡片读取的是 `https://ip.net.coffee/cdn-cgi/trace` 的 `ip` / `colo`；下方比较模块另查多个站点。因此顶部显示 NRT，只证明访问 Net.Coffee 的该次请求命中东京机房，不能直接替代访问三个 Claude 域名时的结果。
+
+这两种检测读取 CDN 字段的原理相近，但原会话还核查了三个 Claude 域名各自的真实 DNS、经代理的 DoH 对照和 Clash 实际代理链。可复制的分步命令见 [macOS 手册第 5.4 节](macos-runbook.md#54-目标域名与-cdn必做)。网页内容与探针可能更新，应记录测试日期；本次查阅代码不是本机网络验收。
+
+Claude 综合检测页的 DNS 通过随机子域名与结果接口取得解析器，再显示其中一个结果；需要完整清单时用独立 DNS 页面。不得将单个卡片当成所有解析器都已展示。原生 / 跟随版的两张截图及配置对比见 [经验补充](maintenance-and-findings.md)。该网页的脚本会访问 Claude 域名，其跨站 Cookie 行为也在该文单列，避免把“无账号检测”误解成“不访问 Claude”。
 
 ## 3. DNS：必须看到解析器明细
 
